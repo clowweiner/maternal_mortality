@@ -13,8 +13,35 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r libaries}
+library(tidyverse)
+library(tidycensus)
+library(dplyr)
+library(janitor)
+library(ggplot2)
+library(tmap)
+library(tmaptools)
+library(sf)
+library(leaflet)
+```
+#Reading in Maternal Mortality Data from 
+```{r}
+maternal_deaths <- read_csv("/Users/cecilialow-weiner/Desktop/Data Incubator Project /2013_maternal_mortality_rate.csv")
+```
+
+Calculate Maternal Mortality
+```{r}
+
+
+maternal_mortality_rate <- maternal_deaths %>%
+  group_by(boro_name) %>%
+  mutate(rate=(Maternal_deaths/Live_Births)*100000) 
+```
+
+Create Basic Scatterplot for Boroughs
+```{r}
+ggplot(data = maternal_mortality_rate) + 
+  geom_point(mapping = aes(x = Live_Births, y = Maternal_deaths, color=boro_name))
 ```
 
 ## Including Plots
