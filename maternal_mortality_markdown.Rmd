@@ -7,12 +7,12 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+###Scoping the Problem
+##Maternal Mortality Rates: New York, New York City, and U.S. 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+###I'm interested in examining Maternal Mortality Rates in counties across New York State, with special emphasis on the five boroughs of New York City. Here I'll create a maternal mortality rate, exmaine trends, and visualize the data with maps. 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
+### Loading libraries
 ```{r libaries}
 library(tidyverse)
 library(tidycensus)
@@ -23,33 +23,191 @@ library(tmap)
 library(tmaptools)
 library(sf)
 library(leaflet)
+library(plyr)
 ```
-#Reading in Maternal Mortality Data from 
+
+###Reading in Maternal Mortality Data from https://www.health.ny.gov/statistics/chac/birth/b33.htm 
 ```{r}
 maternal_deaths <- read_csv("/Users/cecilialow-weiner/Desktop/Data Incubator Project /2013_maternal_mortality_rate.csv")
 ```
 
-Calculate Maternal Mortality
+##Calculate Maternal Mortality
+### Maternal Mortality is death within 42 dats of pregnancy termination due to complications of pregnancy, childbirth, and the peurperium. The Rate of Maternal Mortality is calculated by the number of maternal deaths in a specified geographic area divded by total resident live births for the same geographic area within a specified time, multiplied by 100,000. (Source: CDC, 2007)
+
 ```{r}
-
-
 maternal_mortality_rate <- maternal_deaths %>%
   group_by(boro_name) %>%
   mutate(rate=(Maternal_deaths/Live_Births)*100000) 
 ```
 
-Create Basic Scatterplot for Boroughs
+###Scatterplot of Maternal Mortality Rate by Borough
 ```{r}
 ggplot(data = maternal_mortality_rate) + 
   geom_point(mapping = aes(x = Live_Births, y = Maternal_deaths, color=boro_name))
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+#### Bar chart of Maternal Mortality Rate by Borough
+```{r}
+ggplot(data=maternal_mortality_rate, aes(x=boro_name, y=rate, fill=boro_name)) +
+  geom_bar(stat="identity") +
+scale_fill_brewer(palette = "Set2", name = element_blank()) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    x = "Borough Name",
+    y = "Maternal Mortality Rate",
+    title = "Maternal Mortality Rate by Borough")
+     +
+  theme_bw()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Mapping Maternal Mortality in New York City
+
+###Simple chloropeth map of maternal mortality rate in NYC
+
+```{r}
+borough <- "/Users/cecilialow-weiner/Downloads/Borough Boundaries/geo_export_838ba8d5-de6d-49a7-a7a6-681c253a5cf5.shp"
+nyc_boroughs <- read_shape(file=borough, as.sf = TRUE)
+qtm(nyc_boroughs)
+
+
+merged_borough <- merge(nyc_boroughs,maternal_mortality_rate,by="boro_name")
+
+
+tm_shape(merged_borough) +
+  tm_fill(
+    col = "rate",
+    n = 5,
+    style = "jenks"
+  )
+
+```
+
+###Interactive map of maternal mortality rate by borough
+
+```{r}
+ttm()
+tm_shape(merged_borough) +
+  tm_fill(
+    col = "rate",
+    palette = "GnBu",
+    contrast = c(0.2, 0.8),
+    n = 5,
+    style = "jenks",
+    title = "Maternal Mortality Rate",
+    legend.format = list(
+      fun = function(x) {
+        paste0(formatC(x, digits = 1 , format = "f"), "%")
+      }
+    ),
+    popup.vars = c(
+      "Maternal Mortality Rate" = "rate"
+    ),
+    id = "NAME",
+    popup.format = list(rate = list(format = "f"))
+  ) +
+  tm_borders(col = "gray40", lwd = 1, lty = "solid", alpha = NA)
+```
+
+## Scoping the problem in New York State
+
+```{r}
+counties <- ("/Users/cecilialow-weiner/Downloads/cugir-007865/cty036.shp")
+ny_counties <- read_shape(file=counties, as.sf = TRUE)
+qtm(nyc_counties)
+
+
+maternal_mortality_ny <- read_csv("/Users/cecilialow-weiner/Desktop/Data Incubator Project /Maternal_deaths_2013.csv")
+```
+
+###Calculate maternal mortality rate for New York Counties
+```{r}
+maternal_mortality_rate_ny <- maternal_mortality_ny %>%
+  group_by(NAME) %>%
+  mutate(rate=(Maternal_Mortality/Live_Births)*100000) 
+
+maternal_mortality_rate_ny$COUNTYFP <- as.factor(maternal_mortality_rate_ny$COUNTYFP)
+
+merged_counties <- merge(ny_counties,maternal_mortality_rate_ny,by="NAME")
+
+```
+
+## Mapping Maternal Mortality in New York State
+
+### Simple Map
+```{r}
+tm_shape(merged_counties) +
+  tm_fill(
+    col = "rate",
+    n = 5,
+    style = "jenks"
+  )
+```
+
+### Interactive Map
+
+```{r}
+ttm()
+tm_shape(merged_counties) +
+  tm_fill(
+    col = "rate",
+    palette = "GnBu",
+    contrast = c(0.2, 0.8),
+    n = 5,
+    style = "jenks",
+    title = "Maternal Mortality Rate",
+    legend.format = list(
+      fun = function(x) {
+        paste0(formatC(x, digits = 1 , format = "f"), "%")
+      }
+    ),
+    popup.vars = c(
+      "Maternal Mortality Rate" = "rate"
+    ),
+    id = "NAME",
+    popup.format = list(rate = list(format = "f"))
+  ) +
+  tm_borders(col = "gray40", lwd = 1, lty = "solid", alpha = NA)
+```
+
+## Scoping the Problem by Years
+### United States from 1990 to 2015
+
+### Bring in international data on maternal mortality from world bank
+```{r}
+international_maternal_mortality <- read_csv("/Users/cecilialow-weiner/Desktop/Data Incubator Project /international_maternal_mortality_rates.csv")
+
+international_cleaned_names <- clean_names(international_maternal_mortality) 
+
+international_cleaned <- c("country_name", "country_code", "x2013")
+
+new_international_data <- international_cleaned_names[international_cleaned]
+
+```
+### Create line graph of maternal mortality rate in U.S. from 1990 to 2015
+
+```{r}
+united_states_1990_2015 <- international_cleaned_names %>%
+filter(country_name=="United States")
+  
+us_mm_1990_2015 <- read_csv("/Users/cecilialow-weiner/Desktop/Data Incubator Project /maternal_mortality_US_1990_2015.csv") %>%
+  clean_names()
+
+ggplot(data=us_mm_1990_2015, aes(x=year, y=maternal_mortality_rate_per_100_000_live_births))+
+  geom_line()+
+  geom_point()
+```
+
+## New York City from 2006-2015  
+```{r}
+MM_Rate_NYC_time <- read_csv("/Users/cecilialow-weiner/Desktop/Data Incubator Project /maternal_mortality_NYC_2006_2015.csv")%>%
+  clean_names()
+```
+
+### Create line graph of maternal mortality rate in New York City from 2006 to 2015
+```{r}
+ggplot(data=MM_Rate_NYC_time, aes(x=year, y=maternal_mortality_rate_per_100_000_live_births, group=1)) +
+  geom_line()+
+  geom_point()+
+scale_x_continuous(name="Year", limits=c(2006, 2015),breaks=seq(2006,2015,1)) +
+  scale_y_continuous(name="Maternal Mortality Rate", limits=c(10, 40),breaks=seq(10,40,2))
+```
