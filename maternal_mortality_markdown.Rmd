@@ -1,6 +1,6 @@
 ---
 title: "Maternal Mortality in New York"
-output: github_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
@@ -211,3 +211,4 @@ ggplot(data=MM_Rate_NYC_time, aes(x=year, y=maternal_mortality_rate_per_100_000_
 scale_x_continuous(name="Year", limits=c(2006, 2015),breaks=seq(2006,2015,1)) +
   scale_y_continuous(name="Maternal Mortality Rate", limits=c(10, 40),breaks=seq(10,40,2))
 ```
+
