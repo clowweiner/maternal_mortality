@@ -56,8 +56,6 @@ scale_fill_brewer(palette = "Set2", name = element_blank()) +
     x = "Borough Name",
     y = "Maternal Mortality Rate",
     title = "Maternal Mortality Rate by Borough")
-     +
-  theme_bw()
 ```
 
 ## Mapping Maternal Mortality in New York City
@@ -113,7 +111,6 @@ tm_shape(merged_borough) +
 ```{r}
 counties <- ("/Users/cecilialow-weiner/Downloads/cugir-007865/cty036.shp")
 ny_counties <- read_shape(file=counties, as.sf = TRUE)
-qtm(nyc_counties)
 
 
 maternal_mortality_ny <- read_csv("/Users/cecilialow-weiner/Desktop/Data Incubator Project /Maternal_deaths_2013.csv")
