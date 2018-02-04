@@ -1,13 +1,12 @@
 ---
 title: "Maternal Mortality in New York"
-output:  md_document:
-    variant: github_document
+output: rmarkdown::github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-###Scoping the Problem
+#Scoping the Problem
 ##Maternal Mortality Rates: New York, New York City, and U.S. 
 
 ###I'm interested in examining Maternal Mortality Rates in counties across New York State, with special emphasis on the five boroughs of New York City. Here I'll create a maternal mortality rate, exmaine trends, and visualize the data with maps. 
